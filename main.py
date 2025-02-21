@@ -22,18 +22,21 @@ def process_gpt_output():
 
     raw_text = data.get("text", "").strip()
 
-    # Remove any leading emoji or unwanted characters (like the mail icon)
+# Check if the raw text starts with the email icon; if so, remove it.
+if raw_text.startswith("📧"):
     processed_text = raw_text.lstrip("📧").strip()
+else:
+    processed_text = raw_text.strip()
 
-    # Check if "mailto:" appears anywhere in the text (case-insensitive)
-    if "mailto:" in processed_text.lower():
-        # Find the index of "mailto:" in a case-insensitive way
-        lower_text = processed_text.lower()
-        index = lower_text.find("mailto:")
-        mailto_link = processed_text[index:]
-        html_link = f'<a href="{mailto_link}">Click here to send the email</a>'
-    else:
-        html_link = processed_text
+# Use a regex to search for a mailto link more robustly
+import re
+mailto_match = re.search(r'(mailto:[^\s"\'<>]+)', processed_text, re.IGNORECASE)
+if mailto_match:
+    mailto_link = mailto_match.group(1)
+    html_link = f'<a href="{mailto_link}">Click here to send the email</a>'
+else:
+    html_link = processed_text
+
 
     # Create a full HTML page containing the clickable email link
     html_content = f"""<!DOCTYPE html>
