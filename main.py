@@ -1,4 +1,4 @@
-from flask import Flask, request, render_template_string
+from flask import Flask, request, Response, render_template_string
 import re
 
 app = Flask(__name__)
@@ -8,10 +8,10 @@ def process_gpt_output():
     """
     Expects the GPT output to be passed as a parameter named 'text'
     in either form-data or JSON.
-    
-    Example input:
+
+    Example input (JSON):
       {
-         "text": "📧mailto:transferarticulation@uta.edu?subject=RE:%20Assistance%20Needed%20with%20Math%20Credit%20for%20University%20Studies&body=Dear%20Belinda%20Autman,..."
+         "text": "📧mailto:example@example.com?subject=Meeting%20Request&body=Dear%20John,..."
       }
     """
     # Get text from request (either form or JSON)
@@ -22,18 +22,16 @@ def process_gpt_output():
 
     raw_text = data.get("text", "").strip()
 
-    # Remove any leading emoji or unwanted characters
+    # Remove any leading emoji or unwanted characters (like the mail icon)
     processed_text = raw_text.lstrip("📧").strip()
 
-    # Verify the text starts with "mailto:"
+    # Verify the text starts with "mailto:" and create a clickable link
     if processed_text.startswith("mailto:"):
-        # Create a clickable HTML link
         html_link = f'<a href="{processed_text}">Click here to send the email</a>'
     else:
-        # If no valid mailto link found, just return the original text
         html_link = processed_text
 
-    # Wrap in a basic HTML page
+    # Create a full HTML page containing the clickable email link
     html_content = f"""<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -45,9 +43,9 @@ def process_gpt_output():
 </body>
 </html>
 """
-    return html_content
+    # Return the HTML content with the MIME type set to text/html
+    return Response(html_content, mimetype='text/html')
 
 if __name__ == "__main__":
-    # For Railway deployment, use the port assigned by environment variable if needed.
-    # Here we use port 8080 for local testing.
+    # For local testing (Railway will provide its own PORT)
     app.run(host="0.0.0.0", port=8080)
