@@ -6,44 +6,46 @@ app = Flask(__name__)
 
 @app.route("/process", methods=["POST"])
 def process_gpt_output():
-    # Get text from request (either form or JSON)
+    # Retrieve input from JSON or form-data.
     if request.is_json:
         data = request.get_json()
     else:
         data = request.form
 
+    # Get the raw text from the request.
     raw_text = data.get("text", "").strip()
     processed_text = raw_text.strip()
 
-    # Use regex to search for a mailto link that might include query parameters
+    # Use regex to search for a mailto link that may include a query string.
+    # The regex captures anything that starts with "mailto:" followed by non-space characters,
+    # and optionally a '?' with additional characters.
     mailto_match = re.search(r'(mailto:[^\s"\'<>]+(?:\?[^\s"\'<>]+)?)', processed_text, re.IGNORECASE)
+    
     if mailto_match:
         mailto_link_raw = mailto_match.group(1)
-        # Split the mailto link into its base part and query part
+        # Split the link into the base (e.g., "mailto:someone@example.com")
+        # and the query part (e.g., "subject=...&body=...").
         parts = mailto_link_raw.split('?', 1)
-        base = parts[0]  # e.g., "mailto:john@example.com"
+        base = parts[0]
+        
         if len(parts) > 1:
-            query = parts[1]  # e.g., "subject=Meeting&body=Hello John, let's talk soon!"
-            # Process each query parameter: split by '&', then '='
-            query_params = {}
-            for param in query.split('&'):
-                if '=' in param:
-                    k, v = param.split('=', 1)
-                    # Re-encode the value to ensure spaces and special characters are URL-safe
-                    query_params[k] = urllib.parse.quote(v, safe='')
-            # Build the properly encoded query string
-            encoded_query = urllib.parse.urlencode(query_params)
+            query = parts[1]
+            # Parse the query parameters into a list of key-value pairs.
+            query_list = urllib.parse.parse_qsl(query, keep_blank_values=True)
+            # Re-encode the query parameters so that all special characters are percent‑encoded.
+            # Using quote_via=urllib.parse.quote ensures spaces become %20 instead of '+'.
+            encoded_query = urllib.parse.urlencode(query_list, quote_via=urllib.parse.quote)
             mailto_link = f"{base}?{encoded_query}"
         else:
             mailto_link = base
 
-        # Create the clickable HTML anchor tag
+        # Create an HTML anchor tag with the properly encoded mailto link.
         html_link = f'<a href="{mailto_link}">Click here to send the email</a>'
     else:
-        # If no mailto link is found, simply use the processed text
+        # If no mailto link is found, simply return the processed text.
         html_link = processed_text
 
-    # Create a full HTML page with the clickable link
+    # Build the final HTML content.
     html_content = f"""<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -55,6 +57,7 @@ def process_gpt_output():
 </body>
 </html>
 """
+    # Return the HTML page with the correct MIME type.
     return Response(html_content, mimetype='text/html')
 
 if __name__ == "__main__":
