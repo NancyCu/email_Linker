@@ -4,7 +4,7 @@ from flask import Flask, request, Response, redirect, url_for
 app = Flask(__name__)
 
 # 1. This route handles both typed text and image uploads
-@app.route("/submit", methods=["POST"])
+@app.route("/process", methods=["POST"])
 def submit_text_or_image():
     """
     Unified endpoint:
