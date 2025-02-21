@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Test Mailto Form</title>
+</head>
+<body>
+  <h1>Enter Your GPT Output</h1>
+  <!-- 
+    Adjust the action URL to match your Flask app's URL.
+    If you're running locally: http://localhost:8080/process
+    If you're deployed: https://your-app.onrender.com/process or similar.
+  -->
+  <form action="http://localhost:8080/process" method="POST" enctype="application/json">
+    <label for="text">Mailto Text:</label><br>
+    <input type="text" name="text" id="text" size="100"
+           value="📧mailto:example@example.com?subject=Meeting%20Request&body=Hello%20John!">
+    <br><br>
+    <button type="submit">Send to /process</button>
+  </form>
+</body>
+</html>
